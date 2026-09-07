@@ -4,6 +4,7 @@
 
 export type PublicOrPrivate = "public" | "private" | "unknown";
 export type FriendshipStatus = "pending" | "accepted";
+export type Sentiment = "positive" | "neutral" | "negative";
 
 export interface Database {
   public: {
@@ -56,6 +57,7 @@ export interface Database {
           user_id: string;
           course_id: string;
           date_played: string | null;
+          sentiment: Sentiment;
           created_at: string;
         };
         Insert: {
@@ -63,6 +65,7 @@ export interface Database {
           user_id: string;
           course_id: string;
           date_played?: string | null;
+          sentiment?: Sentiment;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["plays"]["Insert"]>;

@@ -2,9 +2,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   computeRankedOrder,
+  computeTieredRankedOrder,
   nextOpponent,
   narrowBounds,
   type ComparisonEdge,
+  type Sentiment,
 } from "./ranking";
 
 /** Simulate inserting `newId` into `sortedIds` (best-first) via binary
@@ -84,6 +86,109 @@ test("full insertion simulation reconstructs the true order for many courses", (
 
   const finalOrder = computeRankedOrder(tieBreakOrder, edges, tieBreakOrder);
   const expected = [...allIds].sort((a, b) => truth[a] - truth[b]);
+  assert.deepEqual(finalOrder, expected);
+});
+
+test("computeTieredRankedOrder: every Positive ranks above Neutral above Negative", () => {
+  const sentimentByCourseId = new Map<string, Sentiment>([
+    ["p1", "positive"],
+    ["p2", "positive"],
+    ["n1", "neutral"],
+    ["neg1", "negative"],
+  ]);
+  // Within-tier comparisons only (mirrors how the compare flow works).
+  const edges: ComparisonEdge[] = [{ winnerId: "p2", loserId: "p1" }];
+  const order = computeTieredRankedOrder(
+    ["p1", "n1", "neg1", "p2"],
+    edges,
+    ["p1", "n1", "neg1", "p2"],
+    sentimentByCourseId,
+  );
+  assert.deepEqual(order, ["p2", "p1", "n1", "neg1"]);
+});
+
+test("computeTieredRankedOrder: ignores a stray cross-tier comparison edge", () => {
+  // Shouldn't happen via the app's UI, but the derivation should still be
+  // safe against it rather than corrupting tier order.
+  const sentimentByCourseId = new Map<string, Sentiment>([
+    ["a", "positive"],
+    ["b", "negative"],
+  ]);
+  const edges: ComparisonEdge[] = [{ winnerId: "b", loserId: "a" }];
+  const order = computeTieredRankedOrder(
+    ["a", "b"],
+    edges,
+    ["a", "b"],
+    sentimentByCourseId,
+  );
+  assert.deepEqual(order, ["a", "b"]);
+});
+
+test("computeTieredRankedOrder: full per-tier insertion simulation", () => {
+  const tiers: Sentiment[] = ["positive", "neutral", "negative"];
+  const sentimentByCourseId = new Map<string, Sentiment>();
+  const truthByTier: Record<Sentiment, Record<string, number>> = {
+    positive: {},
+    neutral: {},
+    negative: {},
+  };
+
+  const allIds: string[] = [];
+  for (const tier of tiers) {
+    const ids = Array.from({ length: 5 }, (_, i) => `${tier}-${i}`);
+    ids.forEach((id, i) => {
+      sentimentByCourseId.set(id, tier);
+      truthByTier[tier][id] = i;
+    });
+    allIds.push(...ids);
+  }
+
+  const arrivalOrder = [...allIds].sort(() => Math.random() - 0.5);
+  const edges: ComparisonEdge[] = [];
+  const tieBreakOrder: string[] = [];
+
+  for (const id of arrivalOrder) {
+    const tier = sentimentByCourseId.get(id)!;
+    // Only search within courses already added in the same tier -- exactly
+    // what the compare page does by filtering on sentiment.
+    const currentTierIds = tieBreakOrder.filter(
+      (existingId) => sentimentByCourseId.get(existingId) === tier,
+    );
+    const currentTierSorted = computeRankedOrder(
+      currentTierIds,
+      edges,
+      currentTierIds,
+    );
+
+    let lo = 0;
+    let hi = currentTierSorted.length;
+    while (true) {
+      const step = nextOpponent(currentTierSorted, lo, hi);
+      if (!step) break;
+      const newCourseWon =
+        truthByTier[tier][id] < truthByTier[tier][step.opponentId];
+      edges.push(
+        newCourseWon
+          ? { winnerId: id, loserId: step.opponentId }
+          : { winnerId: step.opponentId, loserId: id },
+      );
+      ({ lo, hi } = narrowBounds(lo, hi, step.mid, newCourseWon));
+    }
+    tieBreakOrder.push(id);
+  }
+
+  const finalOrder = computeTieredRankedOrder(
+    tieBreakOrder,
+    edges,
+    tieBreakOrder,
+    sentimentByCourseId,
+  );
+
+  const expected = tiers.flatMap((tier) =>
+    Object.keys(truthByTier[tier]).sort(
+      (a, b) => truthByTier[tier][a] - truthByTier[tier][b],
+    ),
+  );
   assert.deepEqual(finalOrder, expected);
 });
 

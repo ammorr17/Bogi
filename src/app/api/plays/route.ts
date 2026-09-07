@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import type { Sentiment } from "@/lib/database.types";
+
+const VALID_SENTIMENTS: Sentiment[] = ["positive", "neutral", "negative"];
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -12,19 +15,30 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const courseId = typeof body.courseId === "string" ? body.courseId : null;
+  const sentiment: Sentiment | null = VALID_SENTIMENTS.includes(body.sentiment)
+    ? body.sentiment
+    : null;
   const datePlayed =
     typeof body.datePlayed === "string" && body.datePlayed ? body.datePlayed : null;
 
   if (!courseId) {
     return NextResponse.json({ error: "courseId is required" }, { status: 400 });
   }
+  if (!sentiment) {
+    return NextResponse.json(
+      { error: "sentiment must be one of positive, neutral, negative" },
+      { status: 400 },
+    );
+  }
 
-  // How many *other* courses has this user already played? That count
-  // determines whether a comparison flow is needed to place the new course.
+  // How many *other* courses has this user already played IN THIS SAME
+  // TIER? Comparisons only ever happen within a tier, so that count (not
+  // the user's total play count) determines the binary-search bounds.
   const { count: existingCount, error: countError } = await supabase
     .from("plays")
     .select("id", { count: "exact", head: true })
     .eq("user_id", user.id)
+    .eq("sentiment", sentiment)
     .neq("course_id", courseId);
 
   if (countError) {
@@ -33,7 +47,12 @@ export async function POST(request: Request) {
 
   const { data: play, error: insertError } = await supabase
     .from("plays")
-    .insert({ user_id: user.id, course_id: courseId, date_played: datePlayed })
+    .insert({
+      user_id: user.id,
+      course_id: courseId,
+      date_played: datePlayed,
+      sentiment,
+    })
     .select("*")
     .single();
 

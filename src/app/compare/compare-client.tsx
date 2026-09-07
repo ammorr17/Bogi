@@ -3,10 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Course } from "@/lib/queries";
+import type { Sentiment } from "@/lib/database.types";
+
+const SENTIMENT_LABEL: Record<Sentiment, string> = {
+  positive: "Positive",
+  neutral: "Neutral",
+  negative: "Negative",
+};
 
 export default function CompareClient({
   newCourse,
   opponent,
+  sentiment,
   mid,
   lo,
   hi,
@@ -14,6 +22,7 @@ export default function CompareClient({
 }: {
   newCourse: Course;
   opponent: Course;
+  sentiment: Sentiment;
   mid: number;
   lo: number;
   hi: number;
@@ -62,7 +71,9 @@ export default function CompareClient({
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-8">
-      <p className="text-center text-sm text-gray-500">Which was better?</p>
+      <p className="text-center text-sm text-gray-500">
+        Which of your {SENTIMENT_LABEL[sentiment]} courses was better?
+      </p>
       <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-gray-100">
         <div
           className="h-full bg-gray-900 transition-all"

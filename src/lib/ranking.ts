@@ -33,12 +33,29 @@
  * unique answer in the common case. The tie-break argument exists only to
  * handle a courses which has not yet been fully placed (e.g. the user
  * abandoned a comparison flow partway through).
+ *
+ * Sentiment tiers (Positive / Neutral / Negative): a coarse pre-filter,
+ * captured once when a course is added, before any head-to-head comparison.
+ * Tiers are strictly ordered and never cross-compared — every Positive
+ * course ranks above every Neutral, above every Negative — so binary-search
+ * insertion only ever happens within the new course's own tier. This is the
+ * same insertion sort as above, just run independently per tier, which
+ * keeps each search small (and therefore fast) even once a user has ranked
+ * a lot of courses. See computeTieredRankedOrder below.
  */
 
 export interface ComparisonEdge {
   winnerId: string;
   loserId: string;
 }
+
+export type Sentiment = "positive" | "neutral" | "negative";
+
+const SENTIMENT_TIER_ORDER: readonly Sentiment[] = [
+  "positive",
+  "neutral",
+  "negative",
+];
 
 /**
  * Derive a user's ranked order (best first) from their raw comparison log.
@@ -107,6 +124,42 @@ export function computeRankedOrder(
     ordered.push(...leftover);
   }
 
+  return ordered;
+}
+
+/**
+ * Same derivation as computeRankedOrder, but groups courses into their
+ * Positive/Neutral/Negative tier first. Each tier is topologically sorted
+ * independently (comparisons only ever exist within a tier, since the
+ * compare flow never offers a cross-tier opponent), then the tiers are
+ * concatenated in fixed order. A course with no recorded sentiment yet
+ * (shouldn't normally happen — the app requires it up front) falls back to
+ * "neutral".
+ */
+export function computeTieredRankedOrder(
+  courseIds: string[],
+  comparisons: ComparisonEdge[],
+  tieBreakOrder: string[],
+  sentimentByCourseId: Map<string, Sentiment>,
+): string[] {
+  const idsByTier = new Map<Sentiment, string[]>(
+    SENTIMENT_TIER_ORDER.map((tier) => [tier, []]),
+  );
+  for (const id of courseIds) {
+    const tier = sentimentByCourseId.get(id) ?? "neutral";
+    idsByTier.get(tier)!.push(id);
+  }
+
+  const ordered: string[] = [];
+  for (const tier of SENTIMENT_TIER_ORDER) {
+    const tierIds = idsByTier.get(tier)!;
+    if (tierIds.length === 0) continue;
+    const tierIdSet = new Set(tierIds);
+    const tierComparisons = comparisons.filter(
+      (c) => tierIdSet.has(c.winnerId) && tierIdSet.has(c.loserId),
+    );
+    ordered.push(...computeRankedOrder(tierIds, tierComparisons, tieBreakOrder));
+  }
   return ordered;
 }
 

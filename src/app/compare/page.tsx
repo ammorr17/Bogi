@@ -23,7 +23,11 @@ export default async function ComparePage({
   const newCourseEntry = ranked.find((r) => r.course.id === newCourseId);
   if (!newCourseEntry) redirect("/rankings");
 
-  const existingRanked = ranked.filter((r) => r.course.id !== newCourseId);
+  // Comparisons only ever happen within a tier, so the search space is the
+  // user's other courses in this same Positive/Neutral/Negative bucket.
+  const existingRanked = ranked.filter(
+    (r) => r.course.id !== newCourseId && r.sentiment === newCourseEntry.sentiment,
+  );
   const existingRankedIds = existingRanked.map((r) => r.course.id);
 
   const lo = params.lo ? Number(params.lo) : 0;
@@ -42,6 +46,7 @@ export default async function ComparePage({
     <CompareClient
       newCourse={newCourseEntry.course}
       opponent={opponentEntry.course}
+      sentiment={newCourseEntry.sentiment}
       mid={step.mid}
       lo={lo}
       hi={hi}

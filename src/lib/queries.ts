@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/database.types";
-import { computeRankedOrder } from "@/lib/ranking";
+import type { Database, Sentiment } from "@/lib/database.types";
+import { computeTieredRankedOrder } from "@/lib/ranking";
 
 type Client = SupabaseClient<Database>;
 export type Course = Database["public"]["Tables"]["courses"]["Row"];
@@ -9,6 +9,7 @@ export interface RankedCourse {
   rank: number;
   course: Course;
   datePlayed: string | null;
+  sentiment: Sentiment;
 }
 
 /**
@@ -23,7 +24,7 @@ export async function getRankedCoursesForUser(
   const [playsRes, comparisonsRes] = await Promise.all([
     supabase
       .from("plays")
-      .select("course_id, date_played, created_at, courses(*)")
+      .select("course_id, date_played, sentiment, created_at, courses(*)")
       .eq("user_id", userId)
       .order("created_at", { ascending: true }),
     supabase
@@ -48,8 +49,16 @@ export async function getRankedCoursesForUser(
     winnerId: c.course_id_winner,
     loserId: c.course_id_loser,
   }));
+  const sentimentByCourseId = new Map(
+    plays.map((p) => [p.course_id, p.sentiment]),
+  );
 
-  const ordered = computeRankedOrder(courseIds, comparisons, tieBreakOrder);
+  const ordered = computeTieredRankedOrder(
+    courseIds,
+    comparisons,
+    tieBreakOrder,
+    sentimentByCourseId,
+  );
   const datePlayedByCourse = new Map(
     plays.map((p) => [p.course_id, p.date_played]),
   );
@@ -62,6 +71,7 @@ export async function getRankedCoursesForUser(
         rank: i + 1,
         course,
         datePlayed: datePlayedByCourse.get(courseId) ?? null,
+        sentiment: sentimentByCourseId.get(courseId) ?? "neutral",
       };
     })
     .filter((r): r is RankedCourse => r !== null);
