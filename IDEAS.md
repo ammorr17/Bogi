@@ -41,6 +41,36 @@ lost. Add to this file freely; no need to ask before jotting something down.
   binary-search, that course sits in a partially-placed spot until they
   manually re-trigger a comparison. Could detect and prompt to finish.
 
+## Global course rankings / top lists
+
+- **Direction (decided):** aggregate everyone's personal rankings into a
+  single numeric score per course, so we can generate lists like "top
+  public courses in Texas" or "top private courses" — filterable by
+  `courses.state` / `public_or_private`, both of which already exist, so
+  filtering itself is essentially free once a score exists.
+- **Decided approach: weighted average of normalized rank.** For each
+  user who's ranked a course, convert its position in *their* derived
+  list to a 0–1 score (best in their list ≈ 1.0, worst ≈ 0.0 — this
+  already accounts for tier for free, since Positive/Neutral/Negative
+  determines position in each user's list). Average that across everyone
+  who's ranked the course, weighted toward the overall mean when a course
+  has few raters (Bayesian/"IMDb-style" adjustment) so one person's #1
+  doesn't outrank a course 50 people love. A query over existing derived
+  data, not a new ranking system.
+  - **Rejected for now: Elo/Bradley-Terry over pooled raw comparisons**
+    (treating every user's head-to-head as one data point in a single
+    global rating model). More statistically rigorous and actually a
+    good fit once there's real volume — this is literally the scenario
+    the ranking.ts doc comment flagged as worth revisiting Elo for — but
+    it's a real rating computation to build, not just a query. Natural
+    upgrade path once usage justifies it; no wasted work from starting
+    with the simpler approach first.
+- **Practical note:** this aggregates across *all* users, so computing it
+  live on every request could get slow at real scale (unlike the
+  per-user rankings, which only ever touch one person's data). Worth
+  caching/recomputing periodically once that matters — not a concern at
+  friends-test size.
+
 ## Course data
 
 - **Course photos.** `courses.photo_url` already exists in the schema but
