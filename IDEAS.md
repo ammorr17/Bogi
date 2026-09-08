@@ -70,6 +70,9 @@ lost. Add to this file freely; no need to ask before jotting something down.
   per-user rankings, which only ever touch one person's data). Worth
   caching/recomputing periodically once that matters — not a concern at
   friends-test size.
+- **Decided: display on a 0–10 scale**, matching Beli. Purely a display
+  choice — the underlying score is computed as 0–1, shown as 0–10 (×10)
+  at render time. No change to the computation itself.
 
 ## Course data
 
