@@ -275,6 +275,32 @@ lost. Add to this file freely; no need to ask before jotting something down.
     booking. No partnership required, just a link — could live on the
     course detail view whenever that exists.
 
+## Growth, onboarding & social extras
+
+*Proposed by Claude during brainstorming, not the user — kept here with
+that noted since everything else in this file originated from you.*
+
+- **Shareable "ranking card."** An exportable image of your top-10 (or a
+  specific tier) — Spotify-Wrapped/Letterboxd-style. Much lower effort
+  than the full public-profile/influencer feature, but captures a chunk
+  of the same "showcase your experience" value, and doubles as a growth
+  mechanic (people share it, their friends want the app).
+- **Bulk-add onboarding.** Adding a course today always triggers the
+  one-at-a-time comparison flow — great for ongoing use, real friction
+  for someone onboarding with 20+ courses already played. Could let
+  people bulk-add without ranking immediately, then work through
+  comparisons incrementally afterward (a "finish ranking" queue).
+- **Played-course overlap + agreement stats between friends.** Distinct
+  from the want-to-play overlap used for trip planning — this is about
+  shared *history*: "you and Alex have both played 8 of the same
+  courses, and agree on the top pick 6 times." Natural complement to the
+  side-by-side friend view that exists today.
+- **Public head-to-head course comparison page** ("Pebble Beach vs.
+  Torrey Pines — which do Bogi users prefer?"), powered by the global
+  course-rankings aggregate above. A decent SEO/growth hook once both
+  global rankings and public profiles exist, since it's shareable
+  content that doesn't require an account to view.
+
 ## Out of scope for v1 (from the original spec — revisit once the core loop
 is proven fun with the friend group)
 
