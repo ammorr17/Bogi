@@ -119,24 +119,33 @@ lost. Add to this file freely; no need to ask before jotting something down.
   stays the relationship for private data sharing (plays, comparisons,
   want-to-play); follows is the one-way "keep up with this person's public
   stuff" relationship.
+- **Decided: a profile is either public or private, as a whole** — one
+  account-level flag (`users.is_public`, default `false`), not per-field
+  or per-photo granularity on top of it.
+  - **Resolves the photo-visibility question**, rather than needing a new
+    tier: the existing 3-tier photo model (private / friends / any
+    signed-in Bogi user) stays exactly as-is and doesn't change meaning.
+    What the profile flag controls is purely the *outer gate* — whether
+    a login-free `/u/[id]`-style route exists at all for that user. On a
+    public profile, that route shows the profile fields plus whatever's
+    already tagged "public" tier (now reachable by anyone, not just
+    signed-in users); private and friends-only photos stay exactly as
+    restricted as they always were, public flag or not. On a private
+    profile (the default), nothing changes from how the app behaves
+    today — "public" tier photos still only reach as far as other
+    signed-in Bogi users, since there's no open route to show them on.
+  - Following only really makes sense against a **public** profile —
+    there's no public content to "follow along with" on a private one.
 - **Real technical implications of "genuinely open web"**, since this is
   new territory for the app (literally everything today requires
   `auth.uid()`):
   - A public route that bypasses the login wall entirely (today's
     middleware redirects every unauthenticated request to `/login` except
     `/login` and `/auth/callback` — a public profile route like `/u/[id]`
-    needs to be added to that exemption list).
-  - A genuine anonymous-read RLS policy on `users` (and whatever profile
-    fields/photos are shown), gated by an `is_public` flag the user
-    controls — not just "authenticated" like every other policy today.
-  - **Reopens the photo-visibility question from Social above.** That
-    decision defined "public" as "any signed-in Bogi user," specifically
-    to avoid open-web/moderation territory. If a user's profile is
-    genuinely public, does their top photo tier now mean the open web
-    too (redefining that tier's meaning based on the profile's
-    public/private state), or does this need a distinct 4th tier so
-    "signed-in-only public" and "open-web public" stay separate concepts?
-    Needs a decision when this gets built, not before.
+    needs to be added to that exemption list, only rendering for users
+    with `is_public = true`).
+  - A genuine anonymous-read RLS policy gated by `is_public` — not just
+    "authenticated" like every other policy today.
   - **Moderation becomes real** once strangers can view content —
     reporting/blocking wasn't needed for the friends-only version of this
     app and will be for this one. Cost of choosing "genuinely open web"
