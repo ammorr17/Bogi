@@ -80,6 +80,23 @@ lost. Add to this file freely; no need to ask before jotting something down.
   nothing in the UI sets or shows it.
 - **"Want to play" → played.** One-click promote a wishlist course
   straight into the add/compare flow instead of re-searching for it.
+- **Course rating & slope.** Official USGA difficulty numbers (Rating ≈
+  expected scratch-golfer score, Slope ≈ relative difficulty for a bogey
+  golfer vs. scratch, standard 113). Real-world nuance: these officially
+  vary by tee set played *and* gender, not one fixed number per course.
+  Simplify for now to a single `rating`/`slope` pair per course (numeric
+  + integer, nullable) — same kind of simplification already made for
+  `public_or_private` — with a full multi-tee model (a `course_tees`
+  table) as a later upgrade if that precision ever matters.
+  Self-reported/community-entered for now, same as the rest of `courses`
+  — GHIN's official course-rating database would be the authoritative
+  source if that partnership (see Third-party integrations below) ever
+  happens.
+- **Emerging dependency: a course detail page.** Photos, this rating/
+  slope data, and the "Booking-lite" deep-link idea (Third-party
+  integrations below) all assume a dedicated per-course view exists to
+  show them on. Worth building that as connective tissue rather than
+  each idea silently assuming it's already there.
 
 ## Social
 
