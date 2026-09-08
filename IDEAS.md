@@ -21,6 +21,28 @@ lost. Add to this file freely; no need to ask before jotting something down.
 - **"Want to play" → played.** One-click promote a wishlist course
   straight into the add/compare flow instead of re-searching for it.
 
+## Social
+
+- **Direction: Bogi becomes a social app**, not just a private ranked
+  list. First concrete step: let users upload photos from a round, with a
+  visibility setting per photo — private / friends-only / public.
+  - **Open question — what does "public" mean?** Any signed-in Bogi user
+    (small RLS change), or genuinely open to the web / unauthenticated
+    visitors (pulls in discovery/moderation concerns the v1 spec
+    explicitly deferred). Needs a decision before building.
+  - **Schema fork to consider**: photos naturally belong to a *visit*
+    ("this pic is from when I played it in July"), but today's schema has
+    one `plays` row per (user, course) ever — no concept of multiple
+    rounds over time. Adding photos may be the right moment to introduce
+    a `rounds`/`visits` table (course + date + photos + maybe its own
+    sentiment) rather than bolting photos onto the single `plays` row.
+    This is a bigger shift than the photo feature itself and would ripple
+    into the ranking derivation (which play/visit does a comparison
+    represent?).
+  - Related, smaller-scope version of "social": friend activity feed
+    (already listed below) becomes much more natural once there's photo
+    content to show in it.
+
 ## Out of scope for v1 (from the original spec — revisit once the core loop
 is proven fun with the friend group)
 
