@@ -99,11 +99,31 @@ lost. Add to this file freely; no need to ask before jotting something down.
     to actually play. This is close to its own feature area (would need
     something like `trips` / `trip_participants` tables) and should be
     scoped separately once Phase 1 proves useful.
-- **Side note for later:** grouping courses by rough geographic proximity
-  (so a "trip" is actually to one area) would need lat/long on `courses`,
-  which the current schema doesn't store — though the OpenGolfAPI dataset
-  used for seeding does include coordinates, so it's there to backfill if
-  this becomes worth building.
+- **Side note:** grouping courses by rough geographic proximity (so a
+  "trip" is actually to one area) needs course coordinates — see
+  "Location-based discovery" below, which needs the same thing.
+
+## Location-based discovery
+
+- **Direction (decided):** a "Courses near you" discovery view — not
+  push notifications (that's a separate, bigger piece of infrastructure
+  if it ever comes up later). Also the natural jumping-off point for
+  surfacing tee times once a booking integration exists (see Third-party
+  integrations below).
+- **Getting the user's location:** browser Geolocation API with a
+  permission prompt, plus a manual city/zip fallback for when permission
+  is denied or on desktop where it's less reliable. Could optionally save
+  a "home location" on the user so it doesn't re-prompt every visit.
+- **Course coordinates:** `courses` doesn't store lat/long today. The
+  OpenGolfAPI dataset used for seeding does include coordinates, so
+  backfilling the already-seeded courses is easy. Courses added manually
+  later would need either a geocoding step at creation time or just stay
+  excluded from proximity search until backfilled. This same lat/long
+  addition also unblocks the geographic-clustering side note under Group
+  trip planning above.
+- **Distance queries:** a plain Haversine-distance SQL query is plenty at
+  this app's scale — no need for PostGIS unless this someday needs to
+  handle far more courses than a golf app for a friend group ever will.
 
 ## Third-party integrations (long-term vision, not near-term)
 
