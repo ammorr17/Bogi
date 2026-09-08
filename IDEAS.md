@@ -80,6 +80,31 @@ lost. Add to this file freely; no need to ask before jotting something down.
   - Natural home for read/unread state and pagination later, but neither
     is required for a first version.
 
+## Group trip planning
+
+- **Direction (decided):** surface overlap between friends' "want to
+  play" lists so a group can spot courses everyone's already interested
+  in — the seed of planning an actual golf trip together.
+- **Decided:** `want_to_play` moves from private-only to friend-visible,
+  same pattern as `plays`/`comparisons` already use (add an
+  `is_friend_with(user_id)` clause to its select policy). Friends can see
+  each other's full want-to-play lists, not just a computed overlap.
+- **Phased:**
+  - Phase 1: pick a set of friends, see which courses appear on more than
+    one of your want-to-play lists. No new "trip" entity yet — just a
+    smarter view over data that already exists once the RLS change above
+    lands.
+  - Phase 2 (stretch): an actual trip-planning flow on top — invites,
+    RSVP, picking dates, maybe voting on which of the overlapping courses
+    to actually play. This is close to its own feature area (would need
+    something like `trips` / `trip_participants` tables) and should be
+    scoped separately once Phase 1 proves useful.
+- **Side note for later:** grouping courses by rough geographic proximity
+  (so a "trip" is actually to one area) would need lat/long on `courses`,
+  which the current schema doesn't store — though the OpenGolfAPI dataset
+  used for seeding does include coordinates, so it's there to backfill if
+  this becomes worth building.
+
 ## Third-party integrations (long-term vision, not near-term)
 
 - **Direction:** connect to GHIN for official handicap tracking / verified
