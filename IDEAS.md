@@ -6,10 +6,37 @@ lost. Add to this file freely; no need to ask before jotting something down.
 
 ## Ranking / comparison flow
 
-- **Re-tier or re-rank a course.** Right now Positive/Neutral/Negative is
-  locked in when you add the course, with no way to fix a mistake or
-  update your opinion after playing it again. Would need to decide what
-  happens to existing comparisons if a course moves tiers.
+- **Visits model + "Rank again"** (design decided, not yet built).
+  Courses change over time (renovations, different conditions, etc.), so a
+  course's rank shouldn't be frozen forever after the first time it's
+  played. Rather than a full per-visit ranked-list (same course showing up
+  multiple times), we're following Beli's pattern: one row per course in
+  the ranked list, with a **"Rank again"** action that lets you re-run the
+  sentiment + comparison flow for a course you've already played.
+
+  How it fits the existing derived-ranking design:
+  - `plays` becomes `visits` — drop the `unique(user_id, course_id)`
+    constraint so a user can log more than one visit to the same course
+    over time.
+  - Sentiment and comparisons move to being per-*visit* rather than
+    per-*course* (`comparisons` references visit ids, not course ids).
+  - To build the ranked list, only each course's **most recent visit**
+    counts. Handy free win: the ranking algorithm already ignores any
+    comparison edge referencing an id outside the set of ids you hand it
+    — so once an old visit's id is excluded from that set (because it's
+    no longer the "current" one), its comparisons automatically stop
+    affecting the ranking. No manual cleanup/migration of old comparisons
+    needed.
+  - "Rank again" = log a new visit → pick a fresh sentiment tier → binary
+    search it against everyone else's *current* visits (never against the
+    course's own superseded visit) → course moves to wherever the new
+    experience lands. Old visits stay around as history (dates/tiers),
+    just stop affecting the active ranking once superseded.
+  - Ripples into: migration (rename/restructure `plays`, `comparisons`
+    columns), `src/lib/queries.ts` (pick "current visit per course" before
+    calling the ranking derivation), a new "Rank again" UI entry point on
+    the rankings page reusing the existing sentiment-prompt + compare-flow
+    components.
 - **Resume an abandoned comparison.** If someone bails out mid
   binary-search, that course sits in a partially-placed spot until they
   manually re-trigger a comparison. Could detect and prompt to finish.
@@ -29,15 +56,10 @@ lost. Add to this file freely; no need to ask before jotting something down.
   - **Decided:** "public" = any signed-in Bogi user, not the open web.
     Keeps this out of discovery/moderation territory for now — just an
     RLS-level visibility tier (private / friends / any signed-in user).
-  - **Open question — schema fork:** photos naturally belong to a *visit*
-    ("this pic is from when I played it in July"), but today's schema has
-    one `plays` row per (user, course) ever — no concept of multiple
-    rounds over time. Adding photos may be the right moment to introduce
-    a `rounds`/`visits` table (course + date + photos + maybe its own
-    sentiment) rather than bolting photos onto the single `plays` row.
-    This is a bigger shift than the photo feature itself and would ripple
-    into the ranking derivation (which play/visit does a comparison
-    represent?).
+  - **Resolved by the visits model above:** photos naturally attach to a
+    `visits` row (one per round played), which is now the planned schema
+    once "Visits model + Rank again" is built — no separate schema
+    decision needed for photos specifically.
   - Related, smaller-scope version of "social": friend activity feed
     (already listed below) becomes much more natural once there's photo
     content to show in it.
