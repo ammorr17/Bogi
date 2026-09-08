@@ -60,9 +60,25 @@ lost. Add to this file freely; no need to ask before jotting something down.
     `visits` row (one per round played), which is now the planned schema
     once "Visits model + Rank again" is built — no separate schema
     decision needed for photos specifically.
-  - Related, smaller-scope version of "social": friend activity feed
-    (already listed below) becomes much more natural once there's photo
-    content to show in it.
+- **Friend activity feed** (design decided, not yet built — depends on
+  the visits model and photos above for real content to show).
+  Beli-style push feed: a single chronological stream aggregating your
+  friends' activity — new courses ranked/added, "Rank again" updates,
+  new photos — not just a pull model where you visit a friend's page to
+  see what's new.
+  - Needs a new `activity_events` table (actor user_id, event type, a
+    reference to the visit/photo/course involved, created_at), written at
+    the same time as the action itself (e.g. the visit-logging API also
+    inserts a "ranked a course" event) rather than derived after the fact.
+  - Feed query for a viewer = events where the actor is an accepted
+    friend (or the viewer), ordered by created_at.
+  - Has to respect the photo visibility tiers from the Social section
+    above: a **private** photo's event should never surface to friends at
+    all (or surface without the photo attached); friends-only and
+    signed-in-only photos are fine to show to an audience that already
+    satisfies those rules.
+  - Natural home for read/unread state and pagination later, but neither
+    is required for a first version.
 
 ## Third-party integrations (long-term vision, not near-term)
 
@@ -94,8 +110,6 @@ lost. Add to this file freely; no need to ask before jotting something down.
 is proven fun with the friend group)
 
 - Recommendation engine / taste-matching
-- Activity feed / notifications (e.g. "your friend just ranked a new
-  course")
 - Native mobile app
 - Monetization, badges, gamification
 
