@@ -26,11 +26,10 @@ lost. Add to this file freely; no need to ask before jotting something down.
 - **Direction: Bogi becomes a social app**, not just a private ranked
   list. First concrete step: let users upload photos from a round, with a
   visibility setting per photo — private / friends-only / public.
-  - **Open question — what does "public" mean?** Any signed-in Bogi user
-    (small RLS change), or genuinely open to the web / unauthenticated
-    visitors (pulls in discovery/moderation concerns the v1 spec
-    explicitly deferred). Needs a decision before building.
-  - **Schema fork to consider**: photos naturally belong to a *visit*
+  - **Decided:** "public" = any signed-in Bogi user, not the open web.
+    Keeps this out of discovery/moderation territory for now — just an
+    RLS-level visibility tier (private / friends / any signed-in user).
+  - **Open question — schema fork:** photos naturally belong to a *visit*
     ("this pic is from when I played it in July"), but today's schema has
     one `plays` row per (user, course) ever — no concept of multiple
     rounds over time. Adding photos may be the right moment to introduce
