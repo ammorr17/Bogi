@@ -80,6 +80,27 @@ lost. Add to this file freely; no need to ask before jotting something down.
   - Natural home for read/unread state and pagination later, but neither
     is required for a first version.
 
+## User profile
+
+- **Direction (decided):** a more robust profile — home course, top
+  ranked course, handicap, years of experience, # of courses ranked.
+- Most of this is close to free:
+  - **Top ranked course** and **# of courses ranked** aren't new data —
+    just rank #1 and the count from the ranking derivation that already
+    exists. No schema needed.
+  - **Home course**, **handicap**, and **years of experience** are the
+    only genuinely new fields — self-reported, added as columns on
+    `users` (home course as an FK to `courses`, the other two as simple
+    nullable fields).
+  - **Free win on visibility:** `users` already has an RLS policy letting
+    friends (and only friends) see your row — so new columns on that same
+    table automatically inherit friends-only visibility with no new
+    policy work, consistent with how plays/comparisons are already
+    scoped. Default to that rather than a different visibility model just
+    for the profile, unless there's a reason to open it wider later.
+  - **Merges with "Handicap-lite"** under Third-party integrations below
+    — same feature, no need to track it twice.
+
 ## Group trip planning
 
 - **Direction (decided):** surface overlap between friends' "want to
@@ -143,9 +164,9 @@ lost. Add to this file freely; no need to ask before jotting something down.
     conversation started, not just an engineering task to schedule.
 - **Lower-effort interim alternatives** that get partial value now, no
   partnership needed:
-  - **Handicap-lite:** a self-reported handicap field, or an unofficial
-    differential calculated from rounds logged in Bogi itself. Not an
-    official USGA handicap, but gives users something.
+  - **Handicap-lite:** see "User profile" above — a self-reported
+    handicap field there covers this until/unless real GHIN access ever
+    happens.
   - **Booking-lite:** deep-link out to a course's existing GolfNow/booking
     page ("Book a tee time →" opens their site) instead of true in-app
     booking. No partnership required, just a link — could live on the
