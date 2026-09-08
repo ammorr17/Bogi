@@ -79,6 +79,8 @@ lost. Add to this file freely; no need to ask before jotting something down.
     satisfies those rules.
   - Natural home for read/unread state and pagination later, but neither
     is required for a first version.
+  - Feed sources expand to "friends OR followed accounts" once the
+    "Public profiles + following" idea below exists.
 
 ## User profile
 
@@ -96,10 +98,52 @@ lost. Add to this file freely; no need to ask before jotting something down.
     friends (and only friends) see your row — so new columns on that same
     table automatically inherit friends-only visibility with no new
     policy work, consistent with how plays/comparisons are already
-    scoped. Default to that rather than a different visibility model just
-    for the profile, unless there's a reason to open it wider later.
+    scoped. That stays the *default* — see "Public profiles + following"
+    below for the opt-in public version of this.
   - **Merges with "Handicap-lite"** under Third-party integrations below
     — same feature, no need to track it twice.
+
+## Public profiles + following (influencers)
+
+- **Direction (decided):** on top of the friends-only profile above, let
+  a user opt into a genuinely public profile — a real URL viewable by
+  anyone on the open web, no Bogi account required. Aimed at golf
+  influencer/creator use: a shareable link (Instagram bio, etc.) where
+  people can follow along with where someone's playing and see their
+  showcased experiences. This is opt-in, not the default — regular
+  friends-test users stay exactly as private as they are today.
+- **Decided: a new, separate "follow" relationship**, not an extension of
+  `friendships`. One-way, no accept step required (`follows`: follower_id,
+  followed_id, created_at) — you can follow someone without them
+  following back, unlike the mutual accept/decline friend model. Friends
+  stays the relationship for private data sharing (plays, comparisons,
+  want-to-play); follows is the one-way "keep up with this person's public
+  stuff" relationship.
+- **Real technical implications of "genuinely open web"**, since this is
+  new territory for the app (literally everything today requires
+  `auth.uid()`):
+  - A public route that bypasses the login wall entirely (today's
+    middleware redirects every unauthenticated request to `/login` except
+    `/login` and `/auth/callback` — a public profile route like `/u/[id]`
+    needs to be added to that exemption list).
+  - A genuine anonymous-read RLS policy on `users` (and whatever profile
+    fields/photos are shown), gated by an `is_public` flag the user
+    controls — not just "authenticated" like every other policy today.
+  - **Reopens the photo-visibility question from Social above.** That
+    decision defined "public" as "any signed-in Bogi user," specifically
+    to avoid open-web/moderation territory. If a user's profile is
+    genuinely public, does their top photo tier now mean the open web
+    too (redefining that tier's meaning based on the profile's
+    public/private state), or does this need a distinct 4th tier so
+    "signed-in-only public" and "open-web public" stay separate concepts?
+    Needs a decision when this gets built, not before.
+  - **Moderation becomes real** once strangers can view content —
+    reporting/blocking wasn't needed for the friends-only version of this
+    app and will be for this one. Cost of choosing "genuinely open web"
+    over the narrower alternative.
+- **Feeds into the friend activity feed above:** once follows exist, feed
+  sources expand from "accepted friends" to "friends OR followed
+  accounts."
 
 ## Group trip planning
 
