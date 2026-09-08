@@ -64,6 +64,32 @@ lost. Add to this file freely; no need to ask before jotting something down.
     (already listed below) becomes much more natural once there's photo
     content to show in it.
 
+## Third-party integrations (long-term vision, not near-term)
+
+- **Direction:** connect to GHIN for official handicap tracking / verified
+  course plays, and to tee-time booking platforms (GolfNow-style) so users
+  can book directly through Bogi — the golf equivalent of Beli's OpenTable
+  integration for restaurant reservations.
+- **Reality check:** neither of these is a self-serve developer API.
+  - GHIN is run by the USGA and access requires a formal
+    partnership/licensing relationship, not a public API key signup.
+  - GolfNow-style booking APIs work like OpenTable's — negotiated
+    partnerships (often with revenue share), not open REST APIs. Beli
+    almost certainly had real user traction before OpenTable agreed to
+    that integration.
+  - Net effect: this is a "once Bogi has real traction" milestone, and
+    that traction is likely a prerequisite to even getting a partnership
+    conversation started, not just an engineering task to schedule.
+- **Lower-effort interim alternatives** that get partial value now, no
+  partnership needed:
+  - **Handicap-lite:** a self-reported handicap field, or an unofficial
+    differential calculated from rounds logged in Bogi itself. Not an
+    official USGA handicap, but gives users something.
+  - **Booking-lite:** deep-link out to a course's existing GolfNow/booking
+    page ("Book a tee time →" opens their site) instead of true in-app
+    booking. No partnership required, just a link — could live on the
+    course detail view whenever that exists.
+
 ## Out of scope for v1 (from the original spec — revisit once the core loop
 is proven fun with the friend group)
 
